@@ -1,7 +1,7 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import cors from "cors";
-const { Configuration, OpenAIApi } =require("openai") ;
+import { Configuration, OpenAIApi } from "openai";
 
 dotenv.config();
 
