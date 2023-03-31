@@ -1,7 +1,8 @@
 import bot from "./assets/bot.svg";
 import user from "./assets/user.svg";
+
 const form = document.querySelector("form");
-const chatContainer = document.querySelector("#chat_container");
+const chatContainer = document.getElementById("chat_container");
 
 let loadInterval;
 
@@ -10,7 +11,7 @@ function loader(element) {
   loadInterval = setInterval(() => {
     element.textContent += ".";
     if (element.textContent === "....") {
-      element.textContent = "";
+      element.textContent = ".";
     }
   }, 300);
 }
@@ -20,6 +21,7 @@ function typeText(element, text) {
   let interval = setInterval(() => {
     if (index < text.length) {
       element.innerHTML += text.charAt(index);
+      index++;
     } else {
       clearInterval(interval);
     }
@@ -33,41 +35,37 @@ function generateUniqueId() {
   return `id-${timeStamp}-${hexadecimalString}`;
 }
 
-function chatStripe(isAi, value, uniqueId) {
+function chatStrip(isAi, value, uniqueId) {
   return `
-     <div class="wrapper ${isAi && "ai"}>
-     <div class="chat">
-<div class="profile">
-<image
-src="${isAi ? bot : user}"
-alt="${isAi ? "bot" : "user"}"
-/>
-     </div>
-     <div class="message" id=${uniqueId}>${value}</div>
-     </div>
-     </div>
-    `;
+  <div class= "wrapper ${isAi && "ai"}">
+  <div class ="chat">
+  <div class ="profile" >
+  <img
+   src="${isAi ? bot : user}"
+   alt=" ${isAi ? "bot" : "user"}"
+   />
+   </div>
+   <div class="message" id=${uniqueId}>${value}</div>
+   </div>
+  </div>
+  `;
 }
 
-const handleSubmmit = async (e) => {
-  // to prevent default we use the following while subimmit the form data
+const handleSubmit = async (e) => {
   e.preventDefault();
+  // Above we prevent a dfualt browser behaviour to reload the page when we submit the form
   const data = new FormData(form);
-  // user's chatstripe
-  chatContainer.innerHTML += chatStripe(false, data.get("prompt"));
-  form.reset();
 
-  // bot's chatstripe
+  chatContainer.innerHTML += chatStrip(false, data.get("prompt"));
+  form.reset();
   const uniqueId = generateUniqueId();
-  chatContainer.innerHTML += chatStripe(true, "", uniqueId);
+  chatContainer.innerHTML += chatStrip(true, " ", uniqueId);
   chatContainer.scrollTop = chatContainer.scrollHeight;
   const messageDiv = document.getElementById(uniqueId);
-
   loader(messageDiv);
 
-  // fetch data from server
-
-  const response = await fetch("http://localhost:5000/", {
+  //fetch data from server->bot's response
+  const response = await fetch("http://localhost:5000", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -78,22 +76,24 @@ const handleSubmmit = async (e) => {
   });
 
   clearInterval(loadInterval);
-
   messageDiv.innerHTML = "";
+
   if (response.ok) {
     const data = await response.json();
     const parseData = data.bot.trim();
+    console.log(parseData);
     typeText(messageDiv, parseData);
   } else {
     const err = await response.text();
-    messageDiv.innerHTML = "Something Went wrong";
+    messageDiv.innerHTML = "Something went wrong";
     alert(err);
   }
 };
 
-form.addEventListener("submit", handleSubmmit);
+form.addEventListener("submit", handleSubmit);
 form.addEventListener("keyup", (e) => {
   if (e.keyCode === 13) {
-    handleSubmmit(e);
+    // 13 enter key code
+    handleSubmit(e);
   }
 });
